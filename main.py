@@ -12,9 +12,9 @@ load_dotenv()
 
 # LangFlow connection settings
 BASE_API_URL = "http://34.59.108.214:7860/"
-FLOW_ID = "4d3b8a75-21a4-4ce7-b41d-2f70aa6e3fdd"
+FLOW_ID = "657a335f-2a96-413b-b14e-8d1b312ff304"
 APPLICATION_TOKEN = os.environ.get("OPENAI_API_KEY")
-ENDPOINT = "4d3b8a75-21a4-4ce7-b41d-2f70aa6e3fdd"  # The endpoint name of the flow
+ENDPOINT = "657a335f-2a96-413b-b14e-8d1b312ff304"  # The endpoint name of the flow
 
 # Initialize session state for conversation memory and agent tracking
 if 'conversation_history' not in st.session_state:
