@@ -184,16 +184,16 @@ def display_agent_dashboard():
         st.metric("Full Explorations", full_explorations)
 
 def main():
-    st.set_page_config(page_title="Multi-Agent Chat Interface", layout="wide")
+    st.set_page_config(page_title="FULL Multi-Agent Chat Interface", layout="wide")
     
-    st.title("Multi-Agent Chat Interface with Dashboard")
+    st.title("FULL Multi-Agent Chat Interface with Dashboard")
     
     # Create tabs for chat and dashboard
     tab1, tab2 = st.tabs(["Chat", "Agent Dashboard"])
     
     with tab1:
         # Chat interface
-        st.subheader("Chat with LangFlow Agents")
+        st.subheader("Chat with FastInnovation Agents")
         
         # Agent selection
         agent_options = list(st.session_state.agents.keys())
