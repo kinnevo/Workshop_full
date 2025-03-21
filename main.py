@@ -239,7 +239,7 @@ def main():
                 update_agent_status(selected_agent, "Failed")
         
         # Conversation management options
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             # Add option to clear conversation
             if st.button("Clear Conversation"):
@@ -247,6 +247,11 @@ def main():
                 st.rerun()
                 
         with col2:
+            if st.button("Init a new conversation"):
+                st.session_state.conversation_history = []
+                # st.rerun()
+
+        with col3:
             # Save conversation as downloadable file
             if st.button("Download Conversation"):
                 # Convert conversation history to JSON string
