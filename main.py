@@ -57,14 +57,16 @@ def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) ->
             "output_type": "chat",
             "input_type": "chat",
             "conversation_history": formatted_history,
-            "user": agent_name  # Pass the user name to LangFlow
+            "user": agent_name,  # Pass the user name to LangFlow
+            "session_id": agent_name
         }
     else:
         payload = {
             "input_value": message,
             "output_type": "chat",
             "input_type": "chat",
-            "user": agent_name  # Pass the user name to LangFlow
+            "user": agent_name,  # Pass the user name to LangFlow
+            "session_id": agent_name
         }
 
     headers = {"Authorization": f"Bearer {APPLICATION_TOKEN}", "Content-Type": "application/json"}
