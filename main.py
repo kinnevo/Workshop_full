@@ -108,10 +108,10 @@ def add_to_history(role: str, content: str, user: str = None):
 def display_conversation():
     """Display the conversation history in the Streamlit UI."""
     for message in st.session_state.conversation_history:
+        agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
         if message["role"] == "user":
-            st.markdown(f"<div style='color: orange'><b>You:</b> {message['content']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='color: orange'><b>You:{agent_info}:</b> {message['content']}</div>", unsafe_allow_html=True)
         else:
-            agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
             st.markdown(f"**Assistant{agent_info}:** {message['content']}")
 
 def update_agent_status(agent_name: str, status: str):
