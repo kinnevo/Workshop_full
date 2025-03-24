@@ -99,12 +99,10 @@ def add_to_history(role: str, content: str, user: str = None):
     message = {
         "role": role,
         "content": content,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "user": user
     }
     
-    if user:
-        message["user"] = user
-        
     st.session_state.conversation_history.append(message)
 
 def display_conversation():
