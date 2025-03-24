@@ -16,19 +16,19 @@ FLOW_ID = "657a335f-2a96-413b-b14e-8d1b312ff304"
 APPLICATION_TOKEN = os.environ.get("OPENAI_API_KEY")
 ENDPOINT = "657a335f-2a96-413b-b14e-8d1b312ff304"  # The endpoint name of the flow
 
-# Initialize session state for conversation memory and agent tracking
+# Initialize session state for conversation memory and user tracking
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
 
-# Initialize agent tracking
-if 'agents' not in st.session_state:
-    st.session_state.agents = {
+# Initialize user tracking
+if 'users' not in st.session_state:
+    st.session_state.users = {
         "Agent_1": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
         "Agent_2": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
         "Agent_3": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False}
     }
 
-# Available agent statuses: "Idle", "Active", "Completed", "Failed"
+# Available user statuses: "Idle", "Active", "Completed", "Failed"
 
 def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) -> dict:
     """
@@ -36,7 +36,7 @@ def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) ->
     
     Args:
         message: The current user message
-        agent_name: The name of the agent to use
+        agent_name: The name of the user to use
         history: Optional list of previous conversation messages
     
     Returns:
@@ -44,7 +44,7 @@ def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) ->
     """
     api_url = f"{BASE_API_URL}/api/v1/run/{ENDPOINT}"
     
-    # Update agent status
+    # Update user status
     update_agent_status(agent_name, "Active")
     
     # Include conversation history if available
@@ -57,14 +57,14 @@ def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) ->
             "output_type": "chat",
             "input_type": "chat",
             "conversation_history": formatted_history,
-            "agent": agent_name  # Pass the agent name to LangFlow
+            "user": agent_name  # Pass the user name to LangFlow
         }
     else:
         payload = {
             "input_value": message,
             "output_type": "chat",
             "input_type": "chat",
-            "agent": agent_name  # Pass the agent name to LangFlow
+            "user": agent_name  # Pass the user name to LangFlow
         }
 
     headers = {"Authorization": f"Bearer {APPLICATION_TOKEN}", "Content-Type": "application/json"}
@@ -80,7 +80,7 @@ def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) ->
             if exploration_completed:
                 update_agent_exploration(agent_name, True)
             
-        # Update agent status to completed
+        # Update user status to completed
         update_agent_status(agent_name, "Completed")
         
         # Increment exploration counter
@@ -88,11 +88,11 @@ def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) ->
         
         return response_data
     except Exception as e:
-        # Update agent status to failed in case of error
+        # Update user status to failed in case of error
         update_agent_status(agent_name, "Failed")
         raise e
 
-def add_to_history(role: str, content: str, agent: str = None):
+def add_to_history(role: str, content: str, user: str = None):
     """Add a message to the conversation history."""
     message = {
         "role": role,
@@ -100,8 +100,8 @@ def add_to_history(role: str, content: str, agent: str = None):
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     
-    if agent:
-        message["agent"] = agent
+    if user:
+        message["user"] = user
         
     st.session_state.conversation_history.append(message)
 
@@ -111,34 +111,34 @@ def display_conversation():
         if message["role"] == "user":
             st.markdown(f"<div style='color: orange'><b>You:</b> {message['content']}</div>", unsafe_allow_html=True)
         else:
-            agent_info = f" (via {message.get('agent', 'Unknown Agent')})" if "agent" in message else ""
+            agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
             st.markdown(f"**Assistant{agent_info}:** {message['content']}")
 
 def update_agent_status(agent_name: str, status: str):
-    """Update the status of an agent."""
-    if agent_name in st.session_state.agents:
-        st.session_state.agents[agent_name]["status"] = status
-        st.session_state.agents[agent_name]["last_active"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    """Update the status of an user."""
+    if agent_name in st.session_state.users:
+        st.session_state.users[agent_name]["status"] = status
+        st.session_state.users[agent_name]["last_active"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def update_agent_exploration(agent_name: str, full_exploration: bool):
-    """Update the full exploration status of an agent."""
-    if agent_name in st.session_state.agents:
-        st.session_state.agents[agent_name]["full_exploration"] = full_exploration
+    """Update the full exploration status of an user."""
+    if agent_name in st.session_state.users:
+        st.session_state.users[agent_name]["full_exploration"] = full_exploration
 
 def increment_agent_exploration(agent_name: str):
-    """Increment the explorations completed counter for an agent."""
-    if agent_name in st.session_state.agents:
-        st.session_state.agents[agent_name]["explorations_completed"] += 1
+    """Increment the explorations completed counter for an user."""
+    if agent_name in st.session_state.users:
+        st.session_state.users[agent_name]["explorations_completed"] += 1
 
 def display_agent_dashboard():
-    """Display a dashboard of agent statuses."""
-    st.subheader("Agent Dashboard")
+    """Display a dashboard of user statuses."""
+    st.subheader("user Dashboard")
     
-    # Convert agent data to DataFrame for display
+    # Convert user data to DataFrame for display
     agent_data = []
-    for agent_name, agent_info in st.session_state.agents.items():
+    for agent_name, agent_info in st.session_state.users.items():
         agent_data.append({
-            "Agent": agent_name,
+            "user": agent_name,
             "Status": agent_info["status"],
             "Last Active": agent_info["last_active"] or "Never",
             "Explorations": agent_info["explorations_completed"],
@@ -172,32 +172,32 @@ def display_agent_dashboard():
     # Add metrics for quick overview
     col1, col2, col3 = st.columns(3)
     with col1:
-        active_agents = sum(1 for agent in st.session_state.agents.values() if agent["status"] == "Active")
-        st.metric("Active Agents", active_agents)
+        active_agents = sum(1 for user in st.session_state.users.values() if user["status"] == "Active")
+        st.metric("Active users", active_agents)
     
     with col2:
-        total_explorations = sum(agent["explorations_completed"] for agent in st.session_state.agents.values())
+        total_explorations = sum(user["explorations_completed"] for user in st.session_state.users.values())
         st.metric("Total Explorations", total_explorations)
         
     with col3:
-        full_explorations = sum(1 for agent in st.session_state.agents.values() if agent["full_exploration"])
+        full_explorations = sum(1 for user in st.session_state.users.values() if user["full_exploration"])
         st.metric("Full Explorations", full_explorations)
 
 def main():
-    st.set_page_config(page_title="FULL Multi-Agent Chat Interface", layout="wide")
+    st.set_page_config(page_title="FULL Multi-user Chat Interface", layout="wide")
     
-    st.title("FULL Multi-Agent Chat Interface with Dashboard")
+    st.title("FULL Multi-user Chat Interface with Dashboard")
     
     # Create tabs for chat and dashboard
-    tab1, tab2 = st.tabs(["Chat", "Agent Dashboard"])
+    tab1, tab2 = st.tabs(["Chat", "user Dashboard"])
     
     with tab1:
         # Chat interface
-        st.subheader("Chat with FastInnovation Agents")
+        st.subheader("Chat with FastInnovation users")
         
-        # Agent selection
-        agent_options = list(st.session_state.agents.keys())
-        selected_agent = st.selectbox("Select Agent", agent_options)
+        # user selection
+        agent_options = list(st.session_state.users.keys())
+        selected_agent = st.selectbox("Select user", agent_options)
         
         # Display conversation history
         display_conversation()
@@ -215,7 +215,7 @@ def main():
             
             try:
                 with st.spinner(f"Running flow with {selected_agent}..."):
-                    # Pass the conversation history to LangFlow with the selected agent
+                    # Pass the conversation history to LangFlow with the selected user
                     response = run_flow(
                         message,
                         agent_name=selected_agent,
@@ -225,7 +225,7 @@ def main():
                     # Extract the response text
                     response_text = response["outputs"][0]["outputs"][0]["results"]["message"]["text"]
                     
-                    # Add bot response to history with agent info
+                    # Add bot response to history with user info
                     add_to_history("assistant", response_text, selected_agent)
                     
                     # Force a rerun to update the display
@@ -235,7 +235,7 @@ def main():
                 st.error(f"Error: {str(e)}")
                 st.error("Response: " + str(response) if 'response' in locals() else "No response received")
                 
-                # Update agent status to failed
+                # Update user status to failed
                 update_agent_status(selected_agent, "Failed")
         
         # Conversation management options
@@ -266,45 +266,45 @@ def main():
                 )
     
     with tab2:
-        # Agent dashboard
+        # user dashboard
         display_agent_dashboard()
         
-        # Add a section for agent management
-        st.subheader("Agent Management")
+        # Add a section for user management
+        st.subheader("user Management")
         
-        # Reset agent status
+        # Reset user status
         col1, col2 = st.columns(2)
         with col1:
-            agent_to_reset = st.selectbox("Reset Agent Status", 
-                                         ["Select an agent"] + agent_options)
-            if st.button("Reset Status") and agent_to_reset != "Select an agent":
+            agent_to_reset = st.selectbox("Reset user Status", 
+                                         ["Select an user"] + agent_options)
+            if st.button("Reset Status") and agent_to_reset != "Select an user":
                 update_agent_status(agent_to_reset, "Idle")
                 st.success(f"Reset {agent_to_reset} status to Idle")
                 st.rerun()
                 
         with col2:
-            if st.button("Reset All Agents"):
-                for agent in st.session_state.agents:
-                    st.session_state.agents[agent]["status"] = "Idle"
-                    st.session_state.agents[agent]["full_exploration"] = False
-                st.success("All agents reset to Idle status")
+            if st.button("Reset All users"):
+                for user in st.session_state.users:
+                    st.session_state.users[user]["status"] = "Idle"
+                    st.session_state.users[user]["full_exploration"] = False
+                st.success("All users reset to Idle status")
                 st.rerun()
         
-        # Add a new agent
-        st.subheader("Add New Agent")
-        new_agent_name = st.text_input("New Agent Name")
-        if st.button("Add Agent") and new_agent_name:
-            if new_agent_name not in st.session_state.agents:
-                st.session_state.agents[new_agent_name] = {
+        # Add a new user
+        st.subheader("Add New user")
+        new_agent_name = st.text_input("New user Name")
+        if st.button("Add user") and new_agent_name:
+            if new_agent_name not in st.session_state.users:
+                st.session_state.users[new_agent_name] = {
                     "status": "Idle", 
                     "last_active": None, 
                     "explorations_completed": 0, 
                     "full_exploration": False
                 }
-                st.success(f"Added new agent: {new_agent_name}")
+                st.success(f"Added new user: {new_agent_name}")
                 st.rerun()
             else:
-                st.error(f"Agent {new_agent_name} already exists")
+                st.error(f"user {new_agent_name} already exists")
                 
         # Auto-refresh dashboard option
         if st.checkbox("Auto-refresh dashboard (every 10 seconds)"):
