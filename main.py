@@ -6,10 +6,101 @@ import json
 import pandas as pd
 import time
 from datetime import datetime
+import sqlite3  # Add this import for SQLite database
 
 # Load environment variables
 load_dotenv()
 
+# Database setup
+def init_db():
+    """Initialize the SQLite database with necessary tables."""
+    conn = sqlite3.connect('conversations.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS conversations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT NOT NULL,
+            conversation_name TEXT,
+            conversation_data TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Initialize database on startup
+init_db()
+
+# Function to save conversation to database
+def save_to_database(user_id, conversation_data, conversation_name=None):
+    """
+    Save a conversation to the SQLite database.
+    
+    Args:
+        user_id: The ID of the user
+        conversation_data: The conversation data in JSON format
+        conversation_name: Optional name for the conversation
+    
+    Returns:
+        The ID of the saved conversation
+    """
+    conn = sqlite3.connect('conversations.db')
+    c = conn.cursor()
+    c.execute(
+        'INSERT INTO conversations (user_id, conversation_name, conversation_data) VALUES (?, ?, ?)',
+        (user_id, conversation_name, json.dumps(conversation_data))
+    )
+    conversation_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    return conversation_id
+
+# Function to retrieve conversations from database
+def get_conversations(user_id=None):
+    """
+    Retrieve conversations from the database.
+    
+    Args:
+        user_id: Optional filter by user ID
+    
+    Returns:
+        List of conversation records
+    """
+    conn = sqlite3.connect('conversations.db')
+    conn.row_factory = sqlite3.Row  # Enable row factory to get dict-like objects
+    c = conn.cursor()
+    
+    if user_id:
+        c.execute('SELECT * FROM conversations WHERE user_id = ? ORDER BY timestamp DESC', (user_id,))
+    else:
+        c.execute('SELECT * FROM conversations ORDER BY timestamp DESC')
+    
+    rows = c.fetchall()
+    result = [dict(row) for row in rows]
+    conn.close()
+    return result
+
+# Function to retrieve a specific conversation by ID
+def get_conversation_by_id(conversation_id):
+    """
+    Retrieve a specific conversation from the database.
+    
+    Args:
+        conversation_id: The ID of the conversation to retrieve
+    
+    Returns:
+        The conversation data as a dict
+    """
+    conn = sqlite3.connect('conversations.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute('SELECT * FROM conversations WHERE id = ?', (conversation_id,))
+    row = c.fetchone()
+    result = dict(row) if row else None
+    conn.close()
+    return result
+
+# Continue with your existing code...
 # LangFlow connection settings
 BASE_API_URL = "http://34.59.108.214:7860/"
 FLOW_ID = "657a335f-2a96-413b-b14e-8d1b312ff304"
@@ -30,8 +121,7 @@ if 'users' not in st.session_state:
         "User_5": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False}
     }
 
-# Available user statuses: "Idle", "Active", "Completed", "Failed"
-
+# The rest of your existing functions...
 def run_flow(message: str, agent_name: str = "User_1", history: list = None) -> dict:
     """
     Run the LangFlow with the given message and conversation history.
@@ -78,7 +168,6 @@ def run_flow(message: str, agent_name: str = "User_1", history: list = None) -> 
         response_data = response.json()
         
         # Check if exploration was completed based on response
-        # You'll need to adapt this logic based on how your LangFlow indicates completion
         if "full_exploration_completed" in response_data or "exploration_status" in response_data:
             exploration_completed = response_data.get("full_exploration_completed", False)
             if exploration_completed:
@@ -158,7 +247,7 @@ def increment_agent_exploration(agent_name: str):
 
 def display_agent_dashboard():
     """Display a dashboard of user statuses."""
-    st.subheader("user Dashboard")
+    st.subheader("User Dashboard")
     
     # Convert user data to DataFrame for display
     agent_data = []
@@ -209,19 +298,20 @@ def display_agent_dashboard():
         full_explorations = sum(1 for user in st.session_state.users.values() if user["full_exploration"])
         st.metric("Full Explorations", full_explorations)
 
+# Update your main function
 def main():
     st.set_page_config(page_title="FULL Multi-user Chat Interface", layout="wide")
     
     st.title("FULL Multi-user Chat Interface with Dashboard")
     
-    # Create tabs for chat and dashboard
-    tab1, tab2 = st.tabs(["Chat", "user Dashboard"])
+    # Create tabs for chat, dashboard, and conversation history
+    tab1, tab2, tab3 = st.tabs(["Chat", "User Dashboard", "Conversation History"])
     
     with tab1:
         # Chat interface
         st.subheader("Chat with FastInnovation users")
         
-        # user selection
+        # User selection
         agent_options = list(st.session_state.users.keys())
         selected_agent = st.selectbox("Select user", agent_options)
         
@@ -265,9 +355,8 @@ def main():
         # Display conversation history
         display_conversation()
         
-
         # Conversation management options
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)  # Add a column for the save to DB button
         with col1:
             # Add option to clear conversation
             if st.button("Clear Conversation"):
@@ -292,13 +381,28 @@ def main():
                     file_name="conversation.json",
                     mime="application/json"
                 )
+                
+        with col4:
+            # Add a new button to save conversation to database
+            conversation_name = st.text_input("Conversation Name (optional)")
+            if st.button("Save to Database"):
+                if len(st.session_state.conversation_history) > 0:
+                    # Save conversation to database
+                    conversation_id = save_to_database(
+                        selected_agent, 
+                        st.session_state.conversation_history,
+                        conversation_name
+                    )
+                    st.success(f"Conversation saved to database with ID: {conversation_id}")
+                else:
+                    st.warning("No conversation to save")
     
     with tab2:
-        # user dashboard
+        # User dashboard
         display_agent_dashboard()
         
         # Add a section for user management
-        st.subheader("user Management")
+        st.subheader("User Management")
         
         # Reset user status
         col1, col2 = st.columns(2)
@@ -306,39 +410,4 @@ def main():
             agent_to_reset = st.selectbox("Reset user Status", 
                                          ["Select an user"] + agent_options)
             if st.button("Reset Status") and agent_to_reset != "Select an user":
-                update_agent_status(agent_to_reset, "Idle")
-                st.success(f"Reset {agent_to_reset} status to Idle")
-                st.rerun()
-                
-        with col2:
-            if st.button("Reset All users"):
-                for user in st.session_state.users:
-                    st.session_state.users[user]["status"] = "Idle"
-                    st.session_state.users[user]["full_exploration"] = False
-                st.success("All users reset to Idle status")
-                st.rerun()
-        
-        # Add a new user
-        st.subheader("Add New user")
-        new_agent_name = st.text_input("New user Name")
-        if st.button("Add user") and new_agent_name:
-            if new_agent_name not in st.session_state.users:
-                st.session_state.users[new_agent_name] = {
-                    "status": "Idle", 
-                    "last_active": None, 
-                    "explorations_completed": 0, 
-                    "full_exploration": False
-                }
-                st.success(f"Added new user: {new_agent_name}")
-                st.rerun()
-            else:
-                st.error(f"user {new_agent_name} already exists")
-                
-        # Auto-refresh dashboard option
-        if st.checkbox("Auto-refresh dashboard (every 10 seconds)"):
-            st.write("Dashboard will refresh automatically...")
-            time.sleep(10)
-            st.rerun()
-
-if __name__ == "__main__":
-    main()
+                update_agent_status(agent_to

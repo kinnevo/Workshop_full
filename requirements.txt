@@ -1,22 +1,6 @@
-langflow>=0.5.0
-langchain>=0.0.300
-openai>=0.27.0
-
-# Core dependencies
-streamlit>=1.30.0
-requests>=2.31.0
-python-dotenv>=1.0.0
-
-# Data handling
-pandas>=2.0.0
-numpy>=1.24.0
-
-# Time handling
-pytz>=2023.3
-
-# Optional - for visualization enhancements
-plotly>=5.14.0
-altair>=5.0.0
-
-# Optional - for additional Streamlit components
-streamlit-extras>=0.3.0
+streamlit==1.34.0
+requests==2.31.0
+python-dotenv==1.0.0
+pandas==2.1.0
+python-dateutil==2.8.2
+pytz==2023.3
