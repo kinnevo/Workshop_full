@@ -118,7 +118,27 @@ if 'users' not in st.session_state:
         "User_2": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
         "User_3": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
         "User_4": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
-        "User_5": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False}
+        "User_5": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_6": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_7": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_8": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_9": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_10": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_11": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_12": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_13": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_14": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_15": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_16": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_17": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_18": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_19": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_20": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_21": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_22": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_23": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_24": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_25": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False}
     }
 
 # The rest of your existing functions...
