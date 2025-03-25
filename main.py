@@ -109,12 +109,25 @@ def add_to_history(role: str, content: str, user: str = None):
 
 def display_conversation():
     """Display the conversation history in the Streamlit UI."""
-    for message in st.session_state.conversation_history:
-        agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
-        if message["role"] == "user":
-            st.markdown(f"<div style='color: orange'><b>You</b>{agent_info}: {message['content']}</div>", unsafe_allow_html=True)
-        else:
-            st.markdown(f"**Assistant{agent_info}:** {message['content']}")
+    # Create a container with fixed height and scrolling
+    with st.container():
+        # Add CSS to create scrollable container
+        st.markdown("""
+            <style>
+                div[data-testid="stVerticalBlock"] div[style*="overflow-x: scroll"] {
+                    max-height: 400px;
+                    overflow-y: scroll;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+        
+        # Display messages in scrollable container
+        for message in st.session_state.conversation_history:
+            agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
+            if message["role"] == "user":
+                st.markdown(f"<div style='color: orange'><b>You</b>{agent_info}: {message['content']}</div>", unsafe_allow_html=True)
+            else:
+                st.markdown(f"**Assistant{agent_info}:** {message['content']}")
 
 def update_agent_status(agent_name: str, status: str):
     """Update the status of an user."""
