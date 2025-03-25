@@ -201,9 +201,6 @@ def main():
         agent_options = list(st.session_state.users.keys())
         selected_agent = st.selectbox("Select user", agent_options)
         
-        # Display conversation history
-        display_conversation()
-        
         # User input
         message = st.text_area("Message", placeholder="Ask something...")
         
@@ -239,7 +236,12 @@ def main():
                 
                 # Update user status to failed
                 update_agent_status(selected_agent, "Failed")
+
+
+        # Display conversation history
+        display_conversation()
         
+
         # Conversation management options
         col1, col2, col3 = st.columns(3)
         with col1:
