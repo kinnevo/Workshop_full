@@ -23,14 +23,16 @@ if 'conversation_history' not in st.session_state:
 # Initialize user tracking
 if 'users' not in st.session_state:
     st.session_state.users = {
-        "Agent_1": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
-        "Agent_2": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
-        "Agent_3": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False}
+        "User_1": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_2": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_3": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_4": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False},
+        "User_5": {"status": "Idle", "last_active": None, "explorations_completed": 0, "full_exploration": False}
     }
 
 # Available user statuses: "Idle", "Active", "Completed", "Failed"
 
-def run_flow(message: str, agent_name: str = "Agent_1", history: list = None) -> dict:
+def run_flow(message: str, agent_name: str = "User_1", history: list = None) -> dict:
     """
     Run the LangFlow with the given message and conversation history.
     
