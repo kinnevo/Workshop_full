@@ -215,7 +215,7 @@ def main():
                 return
             
             # Add user message to history
-            add_to_history("user", message)
+            add_to_history("user", message, selected_agent)
             
             try:
                 with st.spinner(f"Running flow with {selected_agent}..."):
