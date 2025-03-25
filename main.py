@@ -351,7 +351,6 @@ def main():
                 # Update user status to failed
                 update_agent_status(selected_agent, "Failed")
 
-
         # Display conversation history
         display_conversation()
         
@@ -407,7 +406,145 @@ def main():
         # Reset user status
         col1, col2 = st.columns(2)
         with col1:
-            agent_to_reset = st.selectbox("Reset user Status", 
-                                         ["Select an user"] + agent_options)
-            if st.button("Reset Status") and agent_to_reset != "Select an user":
-                update_agent_status(agent_to
+            agent_to_reset = st.selectbox("Reset User Status", 
+                                         ["Select a user"] + agent_options)
+            if st.button("Reset Status") and agent_to_reset != "Select a user":
+                update_agent_status(agent_to_reset, "Idle")
+                st.success(f"Reset {agent_to_reset} status to Idle")
+                st.rerun()
+                
+        with col2:
+            if st.button("Reset All Users"):
+                for user in st.session_state.users:
+                    st.session_state.users[user]["status"] = "Idle"
+                    st.session_state.users[user]["full_exploration"] = False
+                st.success("All users reset to Idle status")
+                st.rerun()
+        
+        # Add a new user
+        st.subheader("Add New User")
+        new_agent_name = st.text_input("New User Name")
+        if st.button("Add User") and new_agent_name:
+            if new_agent_name not in st.session_state.users:
+                st.session_state.users[new_agent_name] = {
+                    "status": "Idle", 
+                    "last_active": None, 
+                    "explorations_completed": 0, 
+                    "full_exploration": False
+                }
+                st.success(f"Added new user: {new_agent_name}")
+                st.rerun()
+            else:
+                st.error(f"User {new_agent_name} already exists")
+                
+        # Auto-refresh dashboard option
+        if st.checkbox("Auto-refresh dashboard (every 10 seconds)"):
+            st.write("Dashboard will refresh automatically...")
+            time.sleep(10)
+            st.rerun()
+    
+    # New tab for conversation history
+    with tab3:
+        st.subheader("Conversation History")
+        
+        # Filter options
+        filter_col1, filter_col2 = st.columns(2)
+        with filter_col1:
+            filter_user = st.selectbox(
+                "Filter by User", 
+                ["All Users"] + agent_options
+            )
+        
+        # Get conversations from database
+        if filter_user == "All Users":
+            conversations = get_conversations()
+        else:
+            conversations = get_conversations(filter_user)
+        
+        # Display conversations in an expandable table
+        if not conversations:
+            st.info("No saved conversations found")
+        else:
+            # Create a dataframe for display
+            conv_data = []
+            for conv in conversations:
+                # Parse the conversation data to count messages
+                conv_json = json.loads(conv["conversation_data"])
+                num_messages = len(conv_json)
+                
+                # Get first and last message timestamps
+                first_msg_time = conv_json[0]["timestamp"] if num_messages > 0 else "N/A"
+                last_msg_time = conv_json[-1]["timestamp"] if num_messages > 0 else "N/A"
+                
+                conv_data.append({
+                    "ID": conv["id"],
+                    "User": conv["user_id"],
+                    "Name": conv["conversation_name"] or f"Conversation {conv['id']}",
+                    "Messages": num_messages,
+                    "Started": first_msg_time,
+                    "Last Message": last_msg_time,
+                    "Saved": conv["timestamp"]
+                })
+            
+            # Convert to dataframe
+            conv_df = pd.DataFrame(conv_data)
+            
+            # Create expandable view of conversations
+            for _, row in conv_df.iterrows():
+                with st.expander(f"{row['Name']} - User: {row['User']} - {row['Messages']} messages"):
+                    # Get the full conversation
+                    full_conv = get_conversation_by_id(row["ID"])
+                    if full_conv:
+                        conv_data = json.loads(full_conv["conversation_data"])
+                        
+                        # Display the conversation
+                        st.subheader(f"Conversation: {row['Name']}")
+                        st.write(f"User: {row['User']}")
+                        st.write(f"Saved: {row['Saved']}")
+                        
+                        # Display messages
+                        for msg in conv_data:
+                            user_name = msg.get("user", "Unknown")
+                            if msg["role"] == "user":
+                                st.markdown(f"**👤 User** ({user_name}): {msg['content']}")
+                            else:
+                                st.markdown(f"**🤖 Assistant** ({user_name}): {msg['content']}")
+                        
+                        # Add options to load this conversation into the chat
+                        if st.button(f"Load Conversation {row['ID']} into Chat", key=f"load_{row['ID']}"):
+                            st.session_state.conversation_history = conv_data
+                            st.success(f"Loaded conversation {row['ID']} into chat")
+                            st.rerun()
+                        
+                        # Option to download this specific conversation
+                        json_str = json.dumps(conv_data, indent=2)
+                        st.download_button(
+                            label=f"Download Conversation {row['ID']}",
+                            data=json_str,
+                            file_name=f"conversation_{row['ID']}.json",
+                            mime="application/json",
+                            key=f"download_{row['ID']}"
+                        )
+                        
+                        # Option to delete this conversation
+                        if st.button(f"Delete Conversation {row['ID']}", key=f"delete_{row['ID']}"):
+                            delete_conversation(row["ID"])
+                            st.success(f"Deleted conversation {row['ID']}")
+                            st.rerun()
+
+# Add a function to delete conversations
+def delete_conversation(conversation_id):
+    """
+    Delete a conversation from the database.
+    
+    Args:
+        conversation_id: The ID of the conversation to delete
+    """
+    conn = sqlite3.connect('conversations.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM conversations WHERE id = ?', (conversation_id,))
+    conn.commit()
+    conn.close()
+
+if __name__ == "__main__":
+    main()
