@@ -216,7 +216,7 @@ def add_to_history(role: str, content: str, user: str = None):
     
     st.session_state.conversation_history.append(message)
 
-def display_conversation():
+def display_conversation( selected_agent ):
     """Display the conversation history in the Streamlit UI."""
     # Create scrollable container
     scroll_container = st.container()
@@ -240,11 +240,12 @@ def display_conversation():
         
         # Build message content
         for message in st.session_state.conversation_history:
-            agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
-            if message["role"] == "user":
-                chat_content += f"<div style='color: orange'><b>You</b>{agent_info}: {message['content']}</div><br>"
-            else:
-                chat_content += f"<div><b>Assistant{agent_info}:</b> {message['content']}</div><br>"
+            if message["user"] == selected_agent:
+                agent_info = f" (via {message.get('user', 'Unknown user')})" if "user" in message else ""
+                if message["role"] == "user":
+                    chat_content += f"<div style='color: orange'><b>You</b>{agent_info}: {message['content']}</div><br>"
+                else:
+                    chat_content += f"<div><b>Assistant{agent_info}:</b> {message['content']}</div><br>"
         
         # Display all messages in the container
         chat_container.markdown(chat_content, unsafe_allow_html=True)
@@ -372,7 +373,7 @@ def main():
                 update_agent_status(selected_agent, "Failed")
 
         # Display conversation history
-        display_conversation()
+        display_conversation( selected_agent )
         
         # Conversation management options
         col1, col2, col3, col4 = st.columns(4)  # Add a column for the save to DB button
